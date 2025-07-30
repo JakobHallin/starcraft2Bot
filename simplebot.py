@@ -29,6 +29,22 @@ class MyBot(BotAI):
                     #return to mine after 
                     mineral_field = self.mineral_field.closest_to(worker)
                     self.do(worker.gather(mineral_field))
+        
+        #build barrack
+        total_barracks = self.structures(UnitTypeId.BARRACKS).amount + self.already_pending(UnitTypeId.BARRACKS)
+        if (
+            self.structures(UnitTypeId.SUPPLYDEPOT).ready.amount >= 1
+            and total_barracks < 1
+            and self.can_afford(UnitTypeId.BARRACKS)
+        ):
+            worker = self.workers.random_or(None)
+            if worker:
+                base = cc.position
+                build_pos = Point2((base.x, base.y + 10))
+                self.do(worker.build(UnitTypeId.BARRACKS, build_pos))
+                print(f"🏭 Building Barracks at {build_pos.rounded}")
+                mineral_field = self.mineral_field.closest_to(worker)
+                self.do(worker.gather(mineral_field))
 
 run_game(
     maps.get("Flat64"),  # You can replace with any valid map
