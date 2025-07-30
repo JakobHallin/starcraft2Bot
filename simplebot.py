@@ -39,6 +39,13 @@ class MyBot(BotAI):
             if self.can_afford(UnitTypeId.MARINE):
                 self.do(barracks.train(UnitTypeId.MARINE))
                 print("Training Marine")
+    async def attack_enemy(self):
+        marines = self.units(UnitTypeId.MARINE)
+        if marines.amount >= 12:
+            target = self.enemy_start_locations[0]  
+            for marine in marines.idle: 
+                self.do(marine.attack(target))
+            print(f"Attacking enemy base with {marines.amount} marines")
 
     async def on_step(self, iteration):
         #print(f"Step {iteration}")
@@ -47,6 +54,7 @@ class MyBot(BotAI):
         await self.build_supply_depots()
         await self.build_barracks()
         await self.build_marines()
+        await self.attack_enemy()
 
            
 
