@@ -26,6 +26,9 @@ class MyBot(BotAI):
                     build_pos = Point2((base.x + offset_x, base.y))
                     self.do(worker.build(UnitTypeId.SUPPLYDEPOT, build_pos))
                     print(f"Building Supply Depot #{total_depots + 1} at {build_pos.rounded}")
+                    #return to mine after 
+                    mineral_field = self.mineral_field.closest_to(worker)
+                    self.do(worker.gather(mineral_field))
 
 run_game(
     maps.get("Flat64"),  # You can replace with any valid map
