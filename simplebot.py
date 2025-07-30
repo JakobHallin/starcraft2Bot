@@ -5,15 +5,20 @@ from sc2.main import run_game
 from sc2.player import Bot, Computer
 from sc2.ids.unit_typeid import UnitTypeId
 from sc2.position import Point2
+from sc2.ids.ability_id import AbilityId
+from sc2.ids.unit_typeid import UnitTypeId
 
 
 class MyBot(BotAI):
     async def build_workers(self):
         if self.townhalls:
             cc = self.townhalls.first
-            if self.can_afford(UnitTypeId.SCV) and cc.is_idle:
-                    self.do(cc.train(UnitTypeId.SCV))
-                    print("Train SCV")
+            ideal_workers = sum(townhall.ideal_harvesters for townhall in self.townhalls)+1
+
+            if self.can_afford(UnitTypeId.SCV) and cc.is_idle and self.workers.amount < ideal_workers:
+                self.do(cc.train(UnitTypeId.SCV))   
+                print(f"Train SCV: {self.workers.amount} / {ideal_workers}")
+
 
     async def build_supply_depots(self):
         if self.supply_left < 5 and not self.already_pending(UnitTypeId.SUPPLYDEPOT):
@@ -39,6 +44,7 @@ class MyBot(BotAI):
             if self.can_afford(UnitTypeId.MARINE):
                 self.do(barracks.train(UnitTypeId.MARINE))
                 print("Training Marine")
+
     async def attack_enemy(self):
         marines = self.units(UnitTypeId.MARINE)
         if marines.amount >= 12:
@@ -47,9 +53,16 @@ class MyBot(BotAI):
                 self.do(marine.attack(target))
             print(f"Attacking enemy base with {marines.amount} marines")
 
+    async def build_orbiltal_command(self):
+        if self.townhalls.ready.exists and not self.structures(UnitTypeId.ORBITALCOMMAND).exists:
+            cc = self.townhalls.ready.first
+            if self.can_afford(UnitTypeId.ORBITALCOMMAND):
+                self.do(cc(AbilityId.UPGRADETOORBITAL_ORBITALCOMMAND))
+
     async def on_step(self, iteration):
         #print(f"Step {iteration}")
         await self.distribute_workers()
+        await self.build_orbiltal_command()
         await self.build_workers()
         await self.build_supply_depots()
         await self.build_barracks()
