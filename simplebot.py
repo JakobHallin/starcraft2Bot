@@ -15,7 +15,8 @@ class MyBot(BotAI):
             if self.can_afford(UnitTypeId.SCV) and cc.is_idle:
                     self.do(cc.train(UnitTypeId.SCV))
                     print("Train SCV")
-
+        
+        #build supply
         total_depots = self.structures(UnitTypeId.SUPPLYDEPOT).amount + self.already_pending(UnitTypeId.SUPPLYDEPOT)
         if self.structures(UnitTypeId.SUPPLYDEPOT).amount + self.already_pending(UnitTypeId.SUPPLYDEPOT) < 4:
             if self.can_afford(UnitTypeId.SUPPLYDEPOT):
@@ -42,10 +43,14 @@ class MyBot(BotAI):
                 base = cc.position
                 build_pos = Point2((base.x, base.y + 10))
                 self.do(worker.build(UnitTypeId.BARRACKS, build_pos))
-                print(f"🏭 Building Barracks at {build_pos.rounded}")
+                print(f"Building Barracks at {build_pos.rounded}")
                 mineral_field = self.mineral_field.closest_to(worker)
                 self.do(worker.gather(mineral_field))
-
+        #build marines
+        for barracks in self.structures(UnitTypeId.BARRACKS).ready.idle:
+            if self.can_afford(UnitTypeId.MARINE):
+                self.do(barracks.train(UnitTypeId.MARINE))
+                print("Training Marine")
 run_game(
     maps.get("Flat64"),  # You can replace with any valid map
     [Bot(Race.Terran, MyBot()), Computer(Race.Zerg, Difficulty.Easy)],
