@@ -58,6 +58,14 @@ class MyBot(BotAI):
             cc = self.townhalls.ready.first
             if self.can_afford(UnitTypeId.ORBITALCOMMAND):
                 self.do(cc(AbilityId.UPGRADETOORBITAL_ORBITALCOMMAND))
+    
+    async def calldpown_mule(self):
+        if self.structures(UnitTypeId.ORBITALCOMMAND).ready.exists:
+            oc = self.structures(UnitTypeId.ORBITALCOMMAND).first
+            target_mineral = self.mineral_field.closest_to(oc)
+            if self.can_afford(AbilityId.CALLDOWNMULE_CALLDOWNMULE):
+                self.do(oc(AbilityId.CALLDOWNMULE_CALLDOWNMULE, target_mineral))
+                print("Calling down MULE")
 
     async def on_step(self, iteration):
         #print(f"Step {iteration}")
@@ -68,6 +76,7 @@ class MyBot(BotAI):
         await self.build_barracks()
         await self.build_marines()
         await self.attack_enemy()
+        await self.calldpown_mule()
 
            
 
