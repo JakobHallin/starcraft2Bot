@@ -10,6 +10,14 @@ from sc2.ids.unit_typeid import UnitTypeId
 
 
 class MyBot(BotAI):
+    def __init__(self):
+        self.scout_unit = None
+        self.scout_locations = []
+        self.current_scout_index = 0
+        self.enemy_base_location = None
+        self.scouting_started = False
+        self.last_move_time = 0
+
     async def build_workers(self):
         if self.townhalls:
             cc = self.townhalls.first
@@ -48,7 +56,7 @@ class MyBot(BotAI):
     async def attack_enemy(self):
         marines = self.units(UnitTypeId.MARINE)
         if marines.amount >= 12:
-            target = self.enemy_start_locations[0]  
+            target = self.enemy_base_location  
             for marine in marines.idle: 
                 self.do(marine.attack(target))
             print(f"Attacking enemy base with {marines.amount} marines")
@@ -67,8 +75,49 @@ class MyBot(BotAI):
                 self.do(oc(AbilityId.CALLDOWNMULE_CALLDOWNMULE, target_mineral))
                 print("Calling down MULE")
 
+    
+    def scout_enemy_base(self):
+        if self.enemy_base_location:
+            return  # Already found, no need to continue
+
+        # First time setup
+        if not self.scouting_started:
+            if self.units(UnitTypeId.SCV).amount > 0 and self.enemy_start_locations:
+                self.scout_unit = self.units(UnitTypeId.SCV).random
+                self.scout_locations = list(self.enemy_start_locations)
+                self.current_scout_index = 0
+                self.scouting_started = True
+                self.move_scout_to_next_location()
+            return
+
+        # Safety check
+        if not self.scout_unit or self.scout_unit.tag not in self.units.tags:
+            return
+
+
+        # Check for enemy buildings
+        if self.enemy_structures:
+            self.enemy_base_location = self.enemy_structures.closest_to(self.scout_unit).position
+            print(f"Enemy base found at {self.enemy_base_location}")
+            return
+
+        # Move to next location
+        if self.time - self.last_move_time > 20:
+            self.current_scout_index += 1
+            if self.current_scout_index < len(self.scout_locations):
+                self.move_scout_to_next_location()
+            else:
+                print("Scouting complete. No enemy base found.")
+                self.scout_unit = None  # stop scouting
+
+    def move_scout_to_next_location(self):
+        target = self.scout_locations[self.current_scout_index]
+        self.scout_unit.move(target)
+        self.last_move_time = self.time
+        print(f"Moving scout to location {self.current_scout_index + 1}: {target}")
+
     async def on_step(self, iteration):
-        #print(f"Step {iteration}")
+
         await self.distribute_workers()
         await self.build_orbiltal_command()
         await self.build_workers()
@@ -77,6 +126,7 @@ class MyBot(BotAI):
         await self.build_marines()
         await self.attack_enemy()
         await self.calldpown_mule()
+        self.scout_enemy_base()
 
            
 
