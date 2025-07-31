@@ -67,7 +67,7 @@ class MyBot(BotAI):
                 self.do(cc(AbilityId.UPGRADETOORBITAL_ORBITALCOMMAND))
 
     
-    async def calldpown_mule(self):
+    async def calldown_mule(self):
         if self.structures(UnitTypeId.ORBITALCOMMAND).ready.exists:
             oc = self.structures(UnitTypeId.ORBITALCOMMAND).first
             target_mineral = self.mineral_field.closest_to(oc)
@@ -130,7 +130,7 @@ class MyBot(BotAI):
         await self.build_barracks()
         await self.build_marines()
         await self.attack_enemy()
-        await self.calldpown_mule()
+        await self.calldown_mule()
         self.scout_enemy_base()
         await self.expand()
 
