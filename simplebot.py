@@ -58,7 +58,12 @@ class MyBot(BotAI):
             if self.can_afford(UnitTypeId.MARINE):
                 self.do(barracks.train(UnitTypeId.MARINE))
                 print("Training Marine")
-    
+    async def build_marauders(self):
+        for barracks in self.structures(UnitTypeId.BARRACKS).ready.idle:
+            if barracks.has_add_on:
+                if self.can_afford(UnitTypeId.MARAUDER):
+                    self.do(barracks.train(UnitTypeId.MARAUDER))
+                    print("Training Marauder")
 
     async def attack_enemy(self):
         marines = self.units(UnitTypeId.MARINE)
@@ -173,13 +178,14 @@ class MyBot(BotAI):
         await self.build_supply_depots()
         await self.build_barracks()
         await self.build_techlab()
-        await self.build_marines()
+        #await self.build_marines()
         await self.attack_enemy()
         await self.calldown_mule()
         self.scout_enemy_base()
         await self.expand()
         await self.build_refinery()
-        await self.research_upgrades()
+        await self.research_upgrades_stimpack()
+        #await self.build_marauders()
         
         
 
