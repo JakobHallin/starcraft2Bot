@@ -7,6 +7,7 @@ from sc2.ids.unit_typeid import UnitTypeId
 from sc2.position import Point2
 from sc2.ids.ability_id import AbilityId
 from sc2.ids.unit_typeid import UnitTypeId
+from sc2.ids.upgrade_id import UpgradeId
 
 
 class MyBot(BotAI):
@@ -57,6 +58,7 @@ class MyBot(BotAI):
             if self.can_afford(UnitTypeId.MARINE):
                 self.do(barracks.train(UnitTypeId.MARINE))
                 print("Training Marine")
+    
 
     async def attack_enemy(self):
         marines = self.units(UnitTypeId.MARINE)
@@ -145,6 +147,23 @@ class MyBot(BotAI):
                 self.techlab_built = True
                 print(f"Building Tech Lab on {barracks.tag}")
                 
+    async def research_upgrades_stimpack(self):
+        for barracks in self.structures(UnitTypeId.BARRACKS).ready:
+            if not barracks.has_add_on:
+                continue
+
+            # Get the Tech Lab unit attached to this Barracks
+            tech_labs = self.structures(UnitTypeId.BARRACKSTECHLAB).ready
+            tech_lab = tech_labs.closest_to(barracks) if tech_labs.exists else None
+
+            if tech_lab and tech_lab.is_idle:
+                # Check if we can afford Stimpack and it's not already researched or pending
+                if (
+                    self.can_afford(UpgradeId.STIMPACK)
+                    and self.already_pending_upgrade(UpgradeId.STIMPACK) == 0
+                ):
+                    tech_lab.research(UpgradeId.STIMPACK)
+                    break  # Only issue one research per frame
 
     async def on_step(self, iteration):
 
@@ -160,6 +179,7 @@ class MyBot(BotAI):
         self.scout_enemy_base()
         await self.expand()
         await self.build_refinery()
+        await self.research_upgrades()
         
         
 
