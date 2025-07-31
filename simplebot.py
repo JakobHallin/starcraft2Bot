@@ -116,6 +116,11 @@ class MyBot(BotAI):
         self.last_move_time = self.time
         print(f"Moving scout to location {self.current_scout_index + 1}: {target}")
 
+    async def expand(self):
+        if self.can_afford(UnitTypeId.COMMANDCENTER) and self.townhalls.ready.exists:
+            if self.can_afford(UnitTypeId.COMMANDCENTER):  # can we afford one?
+                await self.expand_now()
+
     async def on_step(self, iteration):
 
         await self.distribute_workers()
@@ -127,6 +132,7 @@ class MyBot(BotAI):
         await self.attack_enemy()
         await self.calldpown_mule()
         self.scout_enemy_base()
+        await self.expand()
 
            
 
