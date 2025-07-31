@@ -62,9 +62,8 @@ class MyBot(BotAI):
             print(f"Attacking enemy base with {marines.amount} marines")
 
     async def build_orbiltal_command(self):
-        if self.townhalls.ready.exists and not self.structures(UnitTypeId.ORBITALCOMMAND).exists:
-            cc = self.townhalls.ready.first
-            if self.can_afford(UnitTypeId.ORBITALCOMMAND):
+        for cc in self.townhalls.ready:
+            if cc.type_id == UnitTypeId.COMMANDCENTER and self.can_afford(UnitTypeId.ORBITALCOMMAND):
                 self.do(cc(AbilityId.UPGRADETOORBITAL_ORBITALCOMMAND))
     
     async def calldpown_mule(self):
