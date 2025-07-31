@@ -17,6 +17,7 @@ class MyBot(BotAI):
         self.enemy_base_location = None
         self.scouting_started = False
         self.last_move_time = 0
+        self.max_barracks = 0 #starting with max 3 baracks but later can be increased
 
     async def build_workers(self):
         #if self.townhalls:
@@ -37,8 +38,10 @@ class MyBot(BotAI):
 
     async def build_barracks(self):
         total_barracks = self.structures(UnitTypeId.BARRACKS).amount + self.already_pending(UnitTypeId.BARRACKS)
-
-        if self.structures(UnitTypeId.SUPPLYDEPOT).ready.amount >= 1 and total_barracks < 3:
+        num_cc = self.structures(UnitTypeId.COMMANDCENTER).amount
+        num_orbitals = self.structures(UnitTypeId.ORBITALCOMMAND).amount
+        self.max_barracks = 1 + num_cc * 2 + num_orbitals * 2 # Increase max barracks based on command centers
+        if self.structures(UnitTypeId.SUPPLYDEPOT).ready.amount >= 1 and total_barracks <  self.max_barracks:
             if self.can_afford(UnitTypeId.BARRACKS) and self.townhalls.ready.exists:
                 worker = self.workers.random_or(None)
                 cc = self.townhalls.ready.first
@@ -118,8 +121,17 @@ class MyBot(BotAI):
 
     async def expand(self):
         if self.can_afford(UnitTypeId.COMMANDCENTER) and self.townhalls.ready.exists:
-            if self.can_afford(UnitTypeId.COMMANDCENTER):  # can we afford one?
-                await self.expand_now()
+            await self.expand_now()
+            #self.max_barracks += 1
+    async def build_refinery(self):
+        if self.structures(UnitTypeId.SUPPLYDEPOT).ready.amount >= 1:
+            if self.can_afford(UnitTypeId.REFINERY) and self.gas_buildings.amount < 2:
+                vgs = self.vespene_geyser.closest_to(self.townhalls.first)
+                if vgs:
+                    worker = self.workers.closest_to(vgs)
+                    if worker:
+                        self.do(worker.build(UnitTypeId.REFINERY, vgs))
+                        print("Building Refinery")
 
     async def on_step(self, iteration):
 
@@ -133,11 +145,12 @@ class MyBot(BotAI):
         await self.calldown_mule()
         self.scout_enemy_base()
         await self.expand()
+        await self.build_refinery()
 
            
 
 run_game(
-    maps.get("Flat64"),  # You can replace with any valid map
+    maps.get("Flat96"),  # You can replace with any valid map
     [Bot(Race.Terran, MyBot()), Computer(Race.Zerg, Difficulty.Easy)],
     realtime=False,
 )
