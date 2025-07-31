@@ -19,13 +19,13 @@ class MyBot(BotAI):
         self.last_move_time = 0
 
     async def build_workers(self):
-        if self.townhalls:
-            cc = self.townhalls.first
-            ideal_workers = sum(townhall.ideal_harvesters for townhall in self.townhalls)+1
+        #if self.townhalls:
+        cc = self.townhalls.first
+        ideal_workers = sum(townhall.ideal_harvesters for townhall in self.townhalls)+1
 
-            if self.can_afford(UnitTypeId.SCV) and cc.is_idle and self.workers.amount < ideal_workers:
-                self.do(cc.train(UnitTypeId.SCV))   
-                print(f"Train SCV: {self.workers.amount} / {ideal_workers}")
+        if self.can_afford(UnitTypeId.SCV) and cc.is_idle and self.workers.amount < ideal_workers:
+            self.do(cc.train(UnitTypeId.SCV))   
+            print(f"Train SCV: {self.workers.amount} / {ideal_workers}")
 
 
     async def build_supply_depots(self):
@@ -62,9 +62,10 @@ class MyBot(BotAI):
             print(f"Attacking enemy base with {marines.amount} marines")
 
     async def build_orbiltal_command(self):
-        for cc in self.townhalls.ready:
+       for cc in self.townhalls.ready:
             if cc.type_id == UnitTypeId.COMMANDCENTER and self.can_afford(UnitTypeId.ORBITALCOMMAND):
                 self.do(cc(AbilityId.UPGRADETOORBITAL_ORBITALCOMMAND))
+
     
     async def calldpown_mule(self):
         if self.structures(UnitTypeId.ORBITALCOMMAND).ready.exists:
