@@ -18,6 +18,7 @@ class MyBot(BotAI):
         self.scouting_started = False
         self.last_move_time = 0
         self.max_barracks = 0 #starting with max 3 baracks but later can be increased
+        self.techlab_built = False
 
     async def build_workers(self):
         #if self.townhalls:
@@ -52,6 +53,7 @@ class MyBot(BotAI):
 
     async def build_marines(self):
         for barracks in self.structures(UnitTypeId.BARRACKS).ready.idle:
+            
             if self.can_afford(UnitTypeId.MARINE):
                 self.do(barracks.train(UnitTypeId.MARINE))
                 print("Training Marine")
@@ -133,6 +135,17 @@ class MyBot(BotAI):
                         self.do(worker.build(UnitTypeId.REFINERY, vgs))
                         print("Building Refinery")
 
+    async def build_techlab(self):
+
+        for barracks in self.structures(UnitTypeId.BARRACKS).ready.idle:
+            # Check if we can build a Tech Lab and if the barracks has no addon
+            if not barracks.has_add_on and self.can_afford(UnitTypeId.TECHLAB):
+                # Build the Tech Lab
+                self.do(barracks(AbilityId.BUILD_TECHLAB_BARRACKS))
+                self.techlab_built = True
+                print(f"Building Tech Lab on {barracks.tag}")
+                
+
     async def on_step(self, iteration):
 
         await self.distribute_workers()
@@ -140,12 +153,15 @@ class MyBot(BotAI):
         await self.build_workers()
         await self.build_supply_depots()
         await self.build_barracks()
+        await self.build_techlab()
         await self.build_marines()
         await self.attack_enemy()
         await self.calldown_mule()
         self.scout_enemy_base()
         await self.expand()
         await self.build_refinery()
+        
+        
 
            
 
