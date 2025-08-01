@@ -1,14 +1,27 @@
 from sc2.ids.unit_typeid import UnitTypeId
 from sc2.ids.ability_id import AbilityId
+from sc2.position import Point2
+from sc2.unit import Unit
+from sc2.units import Units
 
 
 #suplly depots
 async def build_supply_depots(bot):
     if bot.supply_left < 5 and not bot.already_pending(UnitTypeId.SUPPLYDEPOT):
         ccs = bot.townhalls.ready
+        location = ccs.first.position.towards(bot.game_info.map_center, 5)
+        builder: Unit = bot.workers.closest_to(location)
+        bot._unassign_worker(builder)                # ← THE critical line
+        bot.workers_reserved_for_tasks.add(builder.tag)
         if ccs.exists and bot.can_afford(UnitTypeId.SUPPLYDEPOT):
-            location = ccs.first.position.towards(bot.game_info.map_center, 5)
-            await bot.build(UnitTypeId.SUPPLYDEPOT, near=location)
+            print("Build Supply Depot")
+            await bot.build(UnitTypeId.SUPPLYDEPOT, near=location, build_worker=builder)
+            print("building supply depot at", location)
+            
+              # Reassign workers after building a supply depot
+            #await bot.build(UnitTypeId.SUPPLYDEPOT, near=location)
+
+
 
 
 

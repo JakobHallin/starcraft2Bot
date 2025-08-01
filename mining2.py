@@ -32,36 +32,11 @@ class WorkerStackBot(BotAI):
             bot.do(cc.train(UnitTypeId.PROBE))   
             print(f"Train SCV: {bot.workers.amount} / {ideal_workers}")
             
-    async def on_start(self):
-        self.client.game_step = 1
-        await self.assign_workers()
-
-    async def assign_workers(self):
-        self.minerals_sorted_by_distance = self.mineral_field.closer_than(
-            10, self.start_location
-        ).sorted_by_distance_to(self.start_location)
-
-        # Assign workers to mineral patch, start with the mineral patch closest to base
-        for mineral in self.minerals_sorted_by_distance:
-            # Assign workers closest to the mineral patch
-            workers = self.workers.tags_not_in(self.worker_to_mineral_patch_dict).sorted_by_distance_to(mineral)
-            for worker in workers:
-                # Assign at most 2 workers per patch
-                # This dict is not really used further down the code, but useful to keep track of how many workers are assigned to this mineral patch - important for when the mineral patch mines out or a worker dies
-                if len(self.mineral_patch_to_list_of_workers.get(mineral.tag, [])) < 2:
-                    if len(self.mineral_patch_to_list_of_workers.get(mineral.tag, [])) == 0:
-                        self.mineral_patch_to_list_of_workers[mineral.tag] = {worker.tag}
-                    else:
-                        self.mineral_patch_to_list_of_workers[mineral.tag].add(worker.tag)
-                    # Keep track of which mineral patch the worker is assigned to - if the mineral patch mines out, reassign the worker to another patch
-                    self.worker_to_mineral_patch_dict[worker.tag] = mineral.tag
-                else:
-                    break
 
     async def on_step(self, iteration: int):
        
         await self.build_workers()
-        await self.assign_workers()
+        #await self.assign_workers()
         # Print info every 30 game-seconds
         # pyre-ignore[16]
         if int(self.time) in {10, 30, 50, 80, 100, 120}:
