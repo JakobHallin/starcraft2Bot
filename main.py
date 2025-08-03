@@ -23,6 +23,7 @@ class MyBot(BotAI):
         self.enemy_base_location = None
         self.scouting_started = False
         self.last_move_time = 0
+        
         self.max_barracks = 0 #starting with max 3 baracks but later can be increased
         self.techlab_built = False
         
@@ -35,6 +36,9 @@ class MyBot(BotAI):
         # Distance factor between 0.95 and 1.0 seems fine
         self.townhall_distance_factor = 1
         self.workers_reserved_for_tasks: set[int] = set()
+
+
+        self.builders_in_progress: set[int] = set()
 
     async def on_start(self):
         self.client.game_step = 1
@@ -61,6 +65,17 @@ class MyBot(BotAI):
                     self.worker_to_mineral_patch_dict[worker.tag] = mineral.tag
                 else:
                     break
+    #def handle_idle_builders(bot):
+    #    for worker in bot.workers.idle:
+     #       if worker.tag in bot.workers_reserved_for_tasks:
+     #           bot.workers_reserved_for_tasks.remove(worker.tag)
+      #          bot.builders_in_progress.discard(worker.tag)
+       #         
+        #        mf = bot.mineral_field.closest_to(worker)
+        #        #mineral_tag = self.worker_to_mineral_patch_dict.get(worker.tag)
+         #       if mf:
+          #          bot.do(worker.gather(mf))
+           #         print(f"SCV {worker.tag} reassigned to mining after building.")
 
 
     def _unassign_worker(self, worker: Unit) -> None:
@@ -76,7 +91,7 @@ class MyBot(BotAI):
     async def build_workers(bot):
         #if bot.townhalls:
         cc = bot.townhalls.first
-        ideal_workers = 22#sum(townhall.ideal_harvesters for townhall in bot.townhalls)+1
+        ideal_workers = sum(townhall.ideal_harvesters for townhall in bot.townhalls)+6
 
         if bot.can_afford(UnitTypeId.SCV) and cc.is_idle and bot.workers.amount < ideal_workers:
             bot.do(cc.train(UnitTypeId.SCV))   
@@ -98,6 +113,8 @@ class MyBot(BotAI):
                 for _ in range(ideal - assigned):
                     worker = bot.workers.gathering.random_or(None)
                     if worker:
+                        bot._unassign_worker(worker)
+                        bot.workers_reserved_for_tasks.add(worker.tag)
                         bot.do(worker.gather(refinery))
 
     
@@ -147,24 +164,24 @@ class MyBot(BotAI):
                         worker.return_resource()
                         worker.gather(mineral, queue=True)
 
-        #await self.distribute_workers()
+        await self.distribute_workers()
 
-        #await build_orbiltal_command(self)
+        await build_orbiltal_command(self)
         await self.build_workers()
         await build_supply_depots(self)
         
         
-        #await build_barracks(self)
-        #await build_techlab(self)
-        #await build_marines(self)
+        await build_barracks(self)
+        await build_techlab(self)
+        await build_marines(self)
         #await attack_enemy(self)
-        #await self.calldown_mule()
-        #scout_enemy_base(self)
-        #await expand(self)
-        #await build_refinery(self)
-        #await research_upgrades_stimpack(self)
-        #await self.fill_refineries()
-        #await self.build_marauders()
+        await self.calldown_mule()
+        scout_enemy_base(self)
+        await expand(self)
+        await build_refinery(self)
+        await self.fill_refineries()
+        await research_upgrades_stimpack(self)
+        await build_marauders(self)
         
         
         
