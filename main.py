@@ -102,7 +102,7 @@ class MyBot(BotAI):
         if self.structures(UnitTypeId.ORBITALCOMMAND).ready.exists:
             oc = self.structures(UnitTypeId.ORBITALCOMMAND).first
             target_mineral = self.mineral_field.closest_to(oc)
-            if self.can_afford(AbilityId.CALLDOWNMULE_CALLDOWNMULE):
+            if oc.energy >= 50 and self.can_afford(AbilityId.CALLDOWNMULE_CALLDOWNMULE):
                 self.do(oc(AbilityId.CALLDOWNMULE_CALLDOWNMULE, target_mineral))
                 print("Calling down MULE")
     async def fill_refineries(bot):
