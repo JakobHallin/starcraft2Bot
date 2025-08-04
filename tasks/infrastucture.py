@@ -10,13 +10,17 @@ async def build_supply_depots(bot):
     if bot.supply_left < 5 and not bot.already_pending(UnitTypeId.SUPPLYDEPOT):
         ccs = bot.townhalls.ready
         location = ccs.first.position.towards(bot.game_info.map_center, 5)
-        available_workers = bot.workers.filter(
-                lambda w: not w.is_constructing_scv and w.tag not in bot.builders_in_progress
-            )
+        available_workers = bot.workers.gathering.filter(
+            lambda w: not w.is_constructing_scv
+        )
+        if not available_workers.exists:
+            print("No SCV available to build Supply Depot. Retrying later.")
+            return  # Prevent crash when no SCV is available
+
         builder: Unit = available_workers.closest_to(location)
 
-        bot._unassign_worker(builder)                # ← THE critical line
-        bot.workers_reserved_for_tasks.add(builder.tag)
+       # bot.worker_manager._unassign_worker(builder)                # ← THE critical line
+        bot.worker_manager.reserve_for_builder(builder)
         if ccs.exists and bot.can_afford(UnitTypeId.SUPPLYDEPOT):
             print("Build Supply Depot")
             await bot.build(UnitTypeId.SUPPLYDEPOT, near=location, build_worker=builder)

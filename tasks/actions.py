@@ -1,5 +1,6 @@
 from sc2.ids.ability_id import AbilityId
 from sc2.ids.unit_typeid import UnitTypeId
+#curently not working
 def scout_enemy_base(bot):
     if bot.enemy_base_location:
         return  # Already found, no need to continue
@@ -7,7 +8,10 @@ def scout_enemy_base(bot):
     # First time setup
     if not bot.scouting_started:
         if bot.units(UnitTypeId.SCV).amount > 0 and bot.enemy_start_locations:
+            
             bot.scout_unit = bot.units(UnitTypeId.SCV).random
+            bot._unassign_worker(bot.scout_unit)
+            bot.workers_reserved_for_tasks.add(bot.scout_unit.tag)
             bot.scout_locations = list(bot.enemy_start_locations)
             bot.current_scout_index = 0
             bot.scouting_started = True
@@ -26,8 +30,10 @@ def scout_enemy_base(bot):
         return
 
     # Move to next location
-    if bot.time - bot.last_move_time > 20:
+    current_target = bot.scout_locations[bot.current_scout_index]
+    if bot.scout_unit.distance_to(current_target) < 10:
         bot.current_scout_index += 1
+        print(f"Scouting scout index { bot.current_scout_index}")
         if bot.current_scout_index < len(bot.scout_locations):
             move_scout_to_next_location(bot)
         else:
@@ -38,7 +44,7 @@ def move_scout_to_next_location(bot):
     target = bot.scout_locations[bot.current_scout_index]
     bot.scout_unit.move(target)
     bot.last_move_time = bot.time
-    print(f"Moving scout to location {bot.current_scout_index + 1}: {target}")
+    print(f"Moving scout to location {bot.current_scout_index + 1}: {target} with tag {bot.scout_unit.tag} ")
 
 
 async def attack_enemy(bot):
