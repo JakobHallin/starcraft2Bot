@@ -35,9 +35,19 @@ async def build_supply_depots(bot):
 
 #build comand center
 async def expand(bot):
-    if bot.can_afford(UnitTypeId.COMMANDCENTER) and bot.townhalls.ready.exists:
-        await bot.expand_now()
+    if bot.can_afford(UnitTypeId.COMMANDCENTER):
+        location = await bot.get_next_expansion()
 
+        if location:
+            # Get a free SCV (use your WorkerTaskManager!)
+            builder = bot.worker_manager.get_available_worker_to_location(location)
+
+            if builder:
+                bot.worker_manager.reserve_for_builder(builder)  # Optional, if you want to track it
+                await bot.build(UnitTypeId.COMMANDCENTER, near=location, build_worker=builder)
+                print(f"Expanding to {location} with SCV {builder.tag}")
+            else:
+                print("No available SCV to expand. Retrying later.")
 
 
 #build refinery
@@ -61,13 +71,14 @@ async def build_refinery(bot):
                     continue
 
                 # Get available SCVs
-                available_workers = bot.workers.gathering.filter(
-                    lambda w: not w.is_constructing_scv
-                )
-                if not available_workers.exists:
-                    return  # No free workers
+                available_worker = bot.worker_manager.get_available_worker_to_location(vgs)
+                if available_worker is None:
+                    print("No SCV available to build. Retrying later.")
+                    return
 
-                builder = available_workers.closest_to(vgs)
+                builder: Unit = available_worker
+
+              #  builder = available_workers.closest_to(vgs)
 
                 # Assign worker
                 
@@ -101,7 +112,15 @@ async def build_barracks(bot):
             ccs = bot.townhalls.ready
             location = ccs.first.position.towards(bot.game_info.map_center, 5)
             builder: Unit = bot.workers.closest_to(location)
-            bot.workers_reserved_for_tasks.add(builder.tag)
+
+
+            available_worker = bot.worker_manager.get_available_worker_to_location(location)
+            if available_worker is None:
+                print("No SCV available to build. Retrying later.")
+                return
+            builder: Unit = available_worker
+
+            bot.worker_manager.reserve_for_builder(builder)
 
             #worker = bot.workers.random_or(None)
             cc = bot.townhalls.ready.first

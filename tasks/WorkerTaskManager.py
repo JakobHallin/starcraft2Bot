@@ -16,7 +16,7 @@ class WorkerTaskManager:
         self.townhall_distance_threshold = 0.01
         # Distance factor between 0.95 and 1.0 seems fine
         self.townhall_distance_factor = 1
-        self.workers_reserved_for_tasks: set[int] = set()
+        #self.workers_reserved_for_tasks: set[int] = set()
 
 
     #reserve workers for specific tasks
@@ -45,7 +45,7 @@ class WorkerTaskManager:
         else:
             print(f"Warning: Worker {worker.tag} not found in any reserved set.")
         
-        self.bot.workers_reserved_for_tasks.discard(worker.tag)
+        #self.bot.workers_reserved_for_tasks.discard(worker.tag)
      
     #is unit reserved for a specific task
     def is_reserved(self, worker):
