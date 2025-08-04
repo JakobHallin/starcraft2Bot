@@ -9,19 +9,18 @@ from sc2.units import Units
 async def build_supply_depots(bot):
     if bot.supply_left < 5 and not bot.already_pending(UnitTypeId.SUPPLYDEPOT):
         ccs = bot.townhalls.ready
-        location = ccs.first.position.towards(bot.game_info.map_center, 5)
-        available_workers = bot.workers.gathering.filter(
-            lambda w: not w.is_constructing_scv
-        )
-        if not available_workers.exists:
-            print("No SCV available to build Supply Depot. Retrying later.")
-            return  # Prevent crash when no SCV is available
-
-        builder: Unit = available_workers.closest_to(location)
-
-       # bot.worker_manager._unassign_worker(builder)                # ← THE critical line
-        bot.worker_manager.reserve_for_builder(builder)
         if ccs.exists and bot.can_afford(UnitTypeId.SUPPLYDEPOT):
+            location = ccs.first.position.towards(bot.game_info.map_center, 5)
+            available_worker = bot.worker_manager.get_available_worker_to_location(location)
+            if available_worker is None:
+                print("No SCV available to build Supply Depot. Retrying later.")
+                return
+
+            builder: Unit = available_worker
+
+        # bot.worker_manager._unassign_worker(builder)                # ← THE critical line
+            bot.worker_manager.reserve_for_builder(builder)
+        
             print("Build Supply Depot")
             await bot.build(UnitTypeId.SUPPLYDEPOT, near=location, build_worker=builder)
             print("building supply depot at", location)
@@ -62,8 +61,8 @@ async def build_refinery(bot):
                     continue
 
                 # Get available SCVs
-                available_workers = bot.workers.filter(
-                    lambda w: not w.is_constructing_scv and w.tag not in bot.builders_in_progress
+                available_workers = bot.workers.gathering.filter(
+                    lambda w: not w.is_constructing_scv
                 )
                 if not available_workers.exists:
                     return  # No free workers
@@ -71,8 +70,8 @@ async def build_refinery(bot):
                 builder = available_workers.closest_to(vgs)
 
                 # Assign worker
-                bot._unassign_worker(builder)
-                bot.workers_reserved_for_tasks.add(builder.tag)
+                
+                bot.worker_manager.reserve_for_gas(builder)
 
                 await bot.build(UnitTypeId.REFINERY, vgs, build_worker=builder)
                 print(f"Building Refinery {vgs.tag}")
@@ -102,7 +101,6 @@ async def build_barracks(bot):
             ccs = bot.townhalls.ready
             location = ccs.first.position.towards(bot.game_info.map_center, 5)
             builder: Unit = bot.workers.closest_to(location)
-            bot._unassign_worker(builder)
             bot.workers_reserved_for_tasks.add(builder.tag)
 
             #worker = bot.workers.random_or(None)

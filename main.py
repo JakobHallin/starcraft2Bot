@@ -72,7 +72,7 @@ class MyBot(BotAI):
         
         #scout_enemy_base(self.worker_manager)
 
-       # await build_orbiltal_command(self)
+        await build_orbiltal_command(self)
         await self.build_workers()
         await build_supply_depots(self)
         
@@ -81,11 +81,11 @@ class MyBot(BotAI):
       #  await build_techlab(self)
       #  await build_marines(self)
         #await attack_enemy(self)
-       # await self.calldown_mule()
+        await self.calldown_mule()
         
        # await expand(self)
-       # await build_refinery(self)
-       # await self.fill_refineries()
+        #await build_refinery(self)
+        #await self.worker_manager.fill_refineries()
        # await research_upgrades_stimpack(self)
        # await build_marauders(self)
         

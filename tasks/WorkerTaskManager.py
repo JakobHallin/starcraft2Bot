@@ -134,4 +134,21 @@ class WorkerTaskManager:
                         self.reserve_for_gas(worker)
                         self.bot.do(worker.gather(refinery))
 
+    #try to get this to work to use it
+    def get_available_workers(self):
+        """Get workers that are not reserved for any tasks."""
+        available_workers = self.bot.workers.filter(
+            lambda w: not w.is_constructing_scv and not self.is_reserved(w)
+        )
+        return available_workers
 
+    def get_available_worker_to_location(self, location):
+        """
+        Returns the closest available worker (not reserved for tasks) to a given location.
+        """
+        available_workers =self.get_available_workers()
+
+        if not available_workers.exists:
+            return None  # No available worker found
+
+        return available_workers.closest_to(location)
